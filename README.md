@@ -1,16 +1,11 @@
-![image](/images/bot-father.png)
+![image](/images/slack-bot.jpeg)
 
-# telegram-voiceflow-bot
+# slack-voiceflow-bot
 
-Since Telegram Bot has appeared, I always interested in how they work. So I decided to build simple Telegram Bot with Node.js and Telegraf. Telegraf is a modern bot framework for Node.js.
+## Create own Bot for Slack
 
-## Create own Bot with BotFather
-
-First, We should create own bot with BotFather. BotFather is the one bot to rule them all. We will use it to create new bot accounts and manage your existing bots.
-
-If you open a chat with a BotFather, click on the “Start” button.
-
-We should create a new bot by clicking /newbot command. Next, you should enter any name for the bot. I named Cupido 
+First, you should create your own app in Slack (https://api.slack.com/apps
+).<br>You can follow the following guide: https://slack.dev/bolt-js/tutorial/getting-started.
 
 ## Setting up the Project
 
@@ -18,7 +13,7 @@ Install and run the project:
 
 1. Clone this repo:
 ```
-git clone https://github.com/xavidop/teelgram-voiceflow-bot.git
+git clone https://github.com/DecathectZero/voiceflow-slack.git
 ```
 
 2. Install dependencies:
@@ -26,88 +21,36 @@ git clone https://github.com/xavidop/teelgram-voiceflow-bot.git
 yarn install
 ```
 
-3. Launch project:
+3. Create your .env file
+```
+SLACK_BOT_TOKEN='token for your Slack app'
+SLACK_SIGNING_SECRET='signing secret for your Slack app'
+PORT=3000
+VOICEFLOW_VERSION_ID='project version id'
+VOICEFLOW_API_KEY='workspace API key'
+VOICEFLOW_RUNTIME_ENDPOINT='https://general-runtime.voiceflow.com'
+```
+
+4. Launch project:
 ```
 yarn start
 ```
 
 ## Write bot’s code
 
-We can create bot by the following code lines:
+You can initiate your bot like this:
 ```js
-const Telegraf = require('telegraf') // import telegram lib
-
-const bot = new Telegraf(process.env.BOT_TOKEN) // get the token from envirenment variable
-bot.start((ctx) => ctx.reply('Welcome')) // display Welcome text when we start bot
-bot.hears('hi', (ctx) => ctx.reply('Hey there')) // listen and handle when user type hi text
-bot.launch() // start
-```
-
-We can change bot’s icon by /mybots command.
-
-Let's create the Voiceflow client to work with Voiceflow's cloud:
-```js
-async function initializeclient(forceRestart){
-    if(chatbot === null || chatbot === undefined || forceRestart){
-        chatbot = new App({
-            versionID: process.env.VOICEFLOW_PROGRAM
-        });
-        return startState = await chatbot.start();
-    }
-    return null;
-}
-```
-
-Let's replace the start starndard replay for this one, getting the correct replay from Voiceflow:
-
-```javascript
-
-const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
-bot.start(async (ctx) => {
-  conversationEnded = false;
-  let startState = await initializeclient(true);
-  ctx.reply(startState.trace[0].payload.message);	
+const app = new App({
+  signingSecret: process.env.SLACK_SIGNING_SECRET,
+  token: process.env.SLACK_BOT_TOKEN,
 });
 
+const factory = new RuntimeClientFactory({
+  versionID: process.env.VOICEFLOW_VERSION_ID!,
+  apiKey: process.env.VOICEFLOW_API_KEY!,
+  endpoint: process.env.VOICEFLOW_RUNTIME_ENDPOINT,
+});
 ```
-
-Then we replace the `hi` utterance for a regex like `(.+)`. This means that the bot will hear for everything. All the text recieved we will pass directly to Voiceflow and the we mange the state of the conversation: if it is ended or if it is not ended yet:
-
-```javascript
-
-const regex = new RegExp(/(.+)/i)
-bot.hears(regex, async (ctx) =>{ 
-    let replay = '';
-    if(!conversationEnded){
-        await initializeclient();
-        const newState = await chatbot.sendText(ctx.message.text);
-        
-        if(newState.trace.length === 0){
-            replay += "Sorry, I did not understand you. Can you repeat, please?"
-        }else{
-            replay = newState.trace[0].payload.message;
-        }
-
-        if(newState.end){
-            replay += "\nIf you want to start again just write /start"
-            conversationEnded = true;
-        }
-    }else{
-        replay = "\nThe Conversation has ended. If you want to start again just write /start"
-    }
-
-    ctx.reply(replay)
-})
-
-```
-
-This is the final architecture:
-
-![image](/images/architecture.png)
-
-## Our Telegram Bot
-
-![image](/images/bot.png)
 
 ## How to contribute?
 

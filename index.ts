@@ -14,17 +14,18 @@ const app = new App({
 });
 
 const factory = new RuntimeClientFactory({
-  versionID: process.env.VOICEFLOW_VERSION_ID,
-  endpoint: 'https://general-runtime.voiceflow.com',
+  versionID: process.env.VOICEFLOW_VERSION_ID!,
+  apiKey: process.env.VOICEFLOW_API_KEY!,
+  endpoint: process.env.VOICEFLOW_RUNTIME_ENDPOINT,
 });
 
 const response = async (context: Context, userID: string, say: SayFn) => {
   await kvstore.set(userID, context.toJSON().state);
 
   // eslint-disable-next-line no-restricted-syntax
-  for (const trace of context.getResponse()) {
+  for (const trace of context.getTrace()) {
     if (trace.type === TraceType.SPEAK) {
-      await say(trace.payload.message);
+      await say(trace.payload.message)
     }
     if (trace.type === TraceType.VISUAL && trace.payload.visualType === 'image') {
       await say({ blocks: [{ type: 'image', image_url: trace.payload.image, alt_text: 'image' }] } as any);
@@ -86,7 +87,7 @@ app.action<BlockButtonAction>(CHIP_ACTION_REGEX, async ({ action, say, ack, payl
 
 (async () => {
   // Start the app
-  await app.start((process.env.PORT as any) || 3000);
-
-  console.log('⚡️ Bolt app is running!');
+  let port = (process.env.PORT as any) || 3000;
+  await app.start(port);
+  console.log(`⚡️ Bolt app is running on port ${port}!`);
 })();

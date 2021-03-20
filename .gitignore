@@ -15,3 +15,5 @@ sessions
 .vscode
 
 .env
+yarn.lock
+yarn.lock
